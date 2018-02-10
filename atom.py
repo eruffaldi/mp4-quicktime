@@ -133,6 +133,7 @@ class Atom(list):
                 padding = ATOM_SPECIAL_CONTAINER_TYPES[self.type]['padding']
                 self.__source_stream.seek(padding, os.SEEK_CUR)
                 self.__load_children()
+                self.__size = padding
             elif self.is_container():
                 self.__load_children()
             
@@ -152,6 +153,9 @@ class Atom(list):
             self.__data.close()
             self.__data = None
     
+    def is_normal_container(self):
+        return self.type in ATOM_CONTAINER_TYPES
+
     def is_container(self):
         return self.is_special_container() or self.type in ATOM_CONTAINER_TYPES
     
@@ -318,8 +322,8 @@ class Atom(list):
             self.__data.truncate(size)
     
     def write(self, str):
-        if self.is_container():
-            raise ValueError, 'Cannot write data to container atoms'
+        if self.is_normal_container():
+            raise ValueError, 'Cannot write data to normal container atoms'
         
         if not hasattr(self, '_Atom__data'):
             # Store starting location in case we already have content
@@ -371,13 +375,10 @@ class Atom(list):
         #       size easily, but will fall over for large content
         content = ''
         
-        # Get content for this atom
         if self.is_container():
             content_stream = StringIO.StringIO()
             [atom.save(content_stream) for atom in self]
-            
-            content_stream.seek(0)
-            content = content_stream.read()
+            content = content_stream.getvalue()
         elif hasattr(self, '_Atom__data') \
         or hasattr(self, '_Atom__source_stream'):
             # Store the initial position so we can seek back to there for
