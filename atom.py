@@ -185,6 +185,12 @@ class Atom(list):
             equal = True
         
         return equal
+    def offset(self):
+        return self.__offset
+    def size(self):
+        return self.__size
+    def makestrstorage(self):
+        self.__data = StringIO.StringIO()
     
     # Container/Sequence behaviours
     
